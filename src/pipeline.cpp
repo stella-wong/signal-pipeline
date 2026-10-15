@@ -55,12 +55,6 @@ Result calculate_fft(
         throw std::bad_alloc();
     }
 
-    // multiply each complex's parts by its window value
-    for (std::size_t i = 0; i < n; ++i) {
-        buffer[i][0] = input[i].real() * window[i];
-        buffer[i][1] = input[i].imag() * window[i];
-    }
-
 #ifdef SIGNAL_HAS_OPENMP
     // parallelize windowing across multiple CPU threads
     if (parallel_window) {
@@ -69,13 +63,19 @@ Result calculate_fft(
             buffer[i][0] = input[i].real() * window[i];
             buffer[i][1] = input[i].imag() * window[i];
         }
-    }
+    } else
 #endif
-
     // request SIMD vectorization to process multiple samples at once
     if (simd_window) {
         #pragma omp simd
         for (long long i = 0; i < static_cast<long long>(n); ++i) {
+            buffer[i][0] = input[i].real() * window[i];
+            buffer[i][1] = input[i].imag() * window[i];
+        }
+    } else {
+        // scalar implementation: process one sample at a time
+        // multiply each real & imaginary parts by its window value
+        for (std::size_t i = 0; i < n; ++i) {
             buffer[i][0] = input[i].real() * window[i];
             buffer[i][1] = input[i].imag() * window[i];
         }
