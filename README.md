@@ -48,16 +48,10 @@ Run with the default input size and seven repetitions:
 Specify a sample count and number of repetitions:
 
 ```bash
-./build/signal_bench 262144 9
+./build/signal_bench [sample_count] [repetitions]
 ```
 
 The program prints CSV columns for implementation, sample count, median runtime, speedup, throughput, peak bin, peak power, maximum absolute error, and relative L2 error.
-
-Redirect output to a file:
-
-```bash
-./build/signal_bench 262144 9 > benchmark.csv
-```
 
 ## Optional CUDA build
 
@@ -74,7 +68,27 @@ cmake --build build-cuda -j
 Run the CUDA-enabled benchmark:
 
 ```bash
-./build-cuda/signal_bench 262144 9
+./build-cuda/signal_bench [sample_count] [repetitions]
+```
+
+## Bash script for benchmark runs
+
+Run 10 benchmark runs, outputting results to CSV files.
+
+```bash
+chmod +x run_benchmarks.sh
+```
+
+Without CUDA:
+
+```bash
+./run_benchmarks.sh
+```
+
+With CUDA:
+
+```bash
+./run_benchmarks.sh --cuda
 ```
 
 ## Benchmark interpretation

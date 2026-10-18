@@ -1,7 +1,13 @@
-
 #!/usr/bin/env bash
 
 set -euo pipefail
+
+# Choose which build to benchmark
+if [[ "${1:-}" == "--cuda" ]]; then
+    executable="./build-cuda/signal_bench"
+else
+    executable="./build/signal_bench"
+fi
 
 mkdir -p results
 
@@ -22,13 +28,12 @@ do
 
     echo "Benchmarking ${name} samples..."
 
+    # Perform 10 independent benchmark runs
     for run in {1..10}; do
-        # Append the results, prefixing each data row with its run number
-        ./build/signal_bench "$samples" 20 |
-            awk -F',' -v run="$run" 'NR > 1 { print run "," $0 }' \
-            >> "$output"
+        "$executable" "$samples" 20 |
+            awk -F',' -v run="$run" \
+                'NR > 1 { print run "," $0 }' >> "$output"
     done
-
 done
 
 echo "All benchmarks completed!"
