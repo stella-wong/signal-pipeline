@@ -112,7 +112,7 @@ Result calculate_fft(
 }
 
 // calculate the power of each frequency bin, find the bin with the highest power
-void calculate_power(Result& result, bool parallel) {
+void calculate_power(Result& result, bool parallel, bool simd) {
     const std::size_t n = result.spectrum.size();
 
 #ifdef SIGNAL_HAS_OPENMP
@@ -126,8 +126,16 @@ void calculate_power(Result& result, bool parallel) {
         }
     } else
 #endif
-    {
-        // calculate power one bin at a time
+    if (simd) {
+        // SIMD: ask the compiler to vectorize the power loop
+        #pragma omp simd
+        for (long long i = 0; i < static_cast<long long>(n); ++i) {
+            const float re = result.spectrum[i].real();
+            const float im = result.spectrum[i].imag();
+            result.power[i] = re * re + im * im;
+        }
+    } else {
+        // scalar: calculate power one bin at a time
         for (std::size_t i = 0; i < n; ++i) {
             const float re = result.spectrum[i].real();
             const float im = result.spectrum[i].imag();
@@ -155,7 +163,7 @@ Result process_scalar(
     const std::vector<float>& window
 ) {
     Result result = calculate_fft(input, window, false, false);
-    calculate_power(result, false);
+    calculate_power(result, false, false);
     return result;
 }
 
@@ -165,7 +173,7 @@ Result process_openmp(
     const std::vector<float>& window
 ) {
     Result result = calculate_fft(input, window, true, false);
-    calculate_power(result, true);
+    calculate_power(result, true, false);
     return result;
 }
 
@@ -175,7 +183,7 @@ Result process_simd(
     const std::vector<float>& window
 ) {
     Result result = calculate_fft(input, window, false, true);
-    calculate_power(result, false);
+    calculate_power(result, false, true);
     return result;
 }
 
